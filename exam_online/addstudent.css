@@ -34,15 +34,16 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }/* Variables */
 :root {
-  --primary: #753535;
-  --secondary: #070336;
-  --success: #c2c2c2;
+
+  --primary: #470a79;
+  --secondary: #7329b8;
+  --success: #4cc9f0;
   --error: #ef476f;
   --dark: #2b2d42;
   --light: #f8f9fa;
   --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
-  --shadow-sm: 0 2px 4px rgba(126, 40, 90, 0.1);
-  --shadow-md: 0 4px 6px rgba(133, 35, 35, 0.1);
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
   --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

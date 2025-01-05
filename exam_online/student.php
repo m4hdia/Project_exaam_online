@@ -1,201 +1,345 @@
+<?php
+require_once 'config.php';
+
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header('Location: Login.php');
+    exit();
+}
+// Get available exams
+$stmt = $pdo->prepare("
+    SELECT e.id, e.title, e.description, e.duration, e.start_date, e.end_date,
+           CASE 
+               WHEN ea.completion_time IS NOT NULL THEN 'Completed'
+               WHEN NOW() BETWEEN e.start_date AND e.end_date THEN 'Available'
+               WHEN NOW() < e.start_date THEN 'Upcoming'
+               ELSE 'Expired'
+           END as status
+    FROM exams e
+    LEFT JOIN exam_attempts ea ON e.id = ea.exam_id 
+        AND ea.student_id = ?
+    WHERE e.is_active = 1
+    ORDER BY e.start_date DESC
+");
+$stmt->execute([$_SESSION['student_id']]);
+$exams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Take Exam</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Include previous CSS styles -->
-    <style>
-        .exam-header {
-            position: sticky;
-            top: 0;
-            background: white;
-            padding: 1rem;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .timer-warning {
-            animation: pulse 2s infinite;
-            color: var(--danger);
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        .question-navigation {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .nav-dot {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f1f5f9;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .nav-dot.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .nav-dot.answered {
-            background: var(--success);
-            color: white;
-        }
-    </style>
+    <title>Available Exams</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+<style>
+    :root {
+    --primary: #4f46e5;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text: #1f2937;
+    --text-light: #6b7280;
+    --background: #f3f4f6;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--background);
+    margin: 0;
+    min-height: 100vh;
+}
+
+.dashboard {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 280px;
+    background: white;
+    padding: 2rem;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    position: fixed;
+    height: 100vh;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 3rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 12px;
+    color: var(--text);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+    background: #f3f4f6;
+}
+
+.nav-item.active {
+    background: var(--primary);
+    color: white;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    margin-left: 280px;
+    padding: 2rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.student-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Exam Grid */
+.exam-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+.exam-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.exam-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.exam-status {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.exam-status.available {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.exam-status.upcoming {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+}
+
+.exam-status.completed {
+    background: rgba(79, 70, 229, 0.1);
+    color: var(--primary);
+}
+
+.exam-status.expired {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.exam-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1rem;
+}
+
+.exam-description {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.exam-details {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-light);
+    font-size: 0.875rem;
+}
+
+.start-exam-btn, .view-result-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.start-exam-btn {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+}
+
+.start-exam-btn:hover {
+    background: #4338ca;
+    transform: translateY(-2px);
+}
+
+.view-result-btn {
+    background: #f3f4f6;
+    color: var(--text);
+}
+
+.view-result-btn:hover {
+    background: #e5e7eb;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .exam-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        padding: 1rem;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+    }
+    
+    .exam-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 <body>
-    <div class="exam-header">
-        <h2 id="examTitle">Exam Title</h2>
-        <div id="examTimer" class="exam-timer"></div>
-    </div>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Student Portal</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.php" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    Dashboard
+                </a>
+                <a href="exams.php" class="nav-item active">
+                    <i class="fas fa-pen"></i>
+                    Exams
+                </a>
+                <a href="results.php" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    Results
+                </a>
+            </nav>
+        </aside>
 
-    <div class="container">
-        <div class="question-navigation" id="questionNav"></div>
-        <div id="questionContainer" class="card"></div>
+        <main class="main-content">
+            <header class="page-header">
+                <h1>Available Exams</h1>
+                <div class="student-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span><?php echo htmlspecialchars($_SESSION['student_name']); ?></span>
+                </div>
+            </header>
 
-        <div class="action-buttons">
-            <button type="button" class="btn btn-secondary" id="prevQuestion">
-                <i class="fas fa-arrow-left"></i>
-                Previous
-            </button>
-            <button type="button" class="btn btn-secondary" id="nextQuestion">
-                Next
-                <i class="fas fa-arrow-right"></i>
-            </button>
-            <button type="button" class="btn btn-primary" id="submitExam">
-                <i class="fas fa-paper-plane"></i>
-                Submit Exam
-            </button>
-        </div>
-    </div>
-
-    <script>
-        class ExamTaker {
-            constructor(examId, duration) {
-                this.examId = examId;
-                this.duration = duration * 60; // Convert to seconds
-                this.currentQuestion = 0;
-                this.answers = {};
-                this.timeRemaining = this.duration;
-                
-                this.initializeExam();
-                this.startTimer();
-                this.setupEventListeners();
-            }
-
-            initializeExam() {
-                // Load exam data - replace with actual API call
-                this.examData = {
-                    title: 'Sample Exam',
-                    questions: [
-                        {
-                            id: 1,
-                            type: 'mcq',
-                            text: 'Sample question 1',
-                            options: ['Option 1', 'Option 2', 'Option 3']
-                        }
-                        // Add more questions
-                    ]
-                };
-
-                document.getElementById('examTitle').textContent = this.examData.title;
-                this.renderQuestionNavigation();
-                this.showQuestion(0);
-            }
-
-            startTimer() {
-                const timerEl = document.getElementById('examTimer');
-                
-                const updateTimer = () => {
-                    if (this.timeRemaining <= 0) {
-                        this.submitExam();
-                        return;
-                    }
-
-                    const minutes = Math.floor(this.timeRemaining / 60);
-                    const seconds = this.timeRemaining % 60;
-                    timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                    
-                    if (this.timeRemaining <= 300) { // 5 minutes warning
-                        timerEl.classList.add('timer-warning');
-                    }
-                    
-                    this.timeRemaining--;
-                };
-
-                updateTimer();
-                this.timer = setInterval(updateTimer, 1000);
-            }
-
-            renderQuestionNavigation() {
-                const nav = document.getElementById('questionNav');
-                nav.innerHTML = '';
-                
-                this.examData.questions.forEach((_, index) => {
-                    const dot = document.createElement('div');
-                    dot.className = `nav-dot ${index === this.currentQuestion ? 'active' : ''} 
-                                   ${this.answers[index] ? 'answered' : ''}`;
-                    dot.textContent = index + 1;
-                    dot.onclick = () => this.showQuestion(index);
-                    nav.appendChild(dot);
-                });
-            }
-
-            showQuestion(index) {
-                const question = this.examData.questions[index];
-                const container = document.getElementById('questionContainer');
-                
-                container.innerHTML = `
-                    <h3>Question ${index + 1}</h3>
-                    <p>${question.text}</p>
-                    ${question.type === 'mcq' ? this.renderMCQOptions(question, index) : 
-                      this.renderOpenQuestion(index)}
-                `;
-
-                this.currentQuestion = index;
-                this.updateNavigation();
-            }
-
-            renderMCQOptions(question, index) {
-                return `
-                    <div class="options-container">
-                        ${question.options.map((option, i) => `
-                            <div class="answer-option">
-                                <input type="radio" name="q${index}" value="${i}"
-                                    ${this.answers[index] === i ? 'checked' : ''}>
-                                <label>${option}</label>
+            <div class="exam-grid">
+                <?php foreach ($exams as $exam): ?>
+                    <div class="exam-card">
+                        <div class="exam-status <?php echo strtolower($exam['status']); ?>">
+                            <?php echo $exam['status']; ?>
+                        </div>
+                        <h2 class="exam-title"><?php echo htmlspecialchars($exam['title']); ?></h2>
+                        <p class="exam-description"><?php echo htmlspecialchars($exam['description']); ?></p>
+                        <div class="exam-details">
+                            <div class="detail-item">
+                                <i class="fas fa-clock"></i>
+                                <span><?php echo $exam['duration']; ?> minutes</span>
                             </div>
-                        `).join('')}
+                            <div class="detail-item">
+                                <i class="fas fa-calendar"></i>
+                                <span><?php echo date('M d, Y', strtotime($exam['start_date'])); ?></span>
+                            </div>
+                        </div>
+                        <?php if ($exam['status'] === 'Available'): ?>
+                            <a href="take_exam.php?id=<?php echo $exam['id']; ?>" 
+                               class="start-exam-btn"
+                               onclick="return confirm('Are you ready to start the exam? The timer will begin immediately.')">
+                                <i class="fas fa-play"></i>
+                                Start Exam
+                            </a>
+                        <?php elseif ($exam['status'] === 'Completed'): ?>
+                            <a href="view_result.php?id=<?php echo $exam['id']; ?>" class="view-result-btn">
+                                <i class="fas fa-eye"></i>
+                                View Result
+                            </a>
+                        <?php endif; ?>
                     </div>
-                `;
-            }
-
-            renderOpenQuestion(index) {
-                return `
-                    <textarea class="input-field" rows="4"
-                        >${this.answers[index] || ''}</textarea>
-                `;
-            }
-
-            updateNavigation() {
-                document.querySelectorAll('.nav-dot').forEach((dot, index) => {
-                    dot.classList.toggle('active', index === this.currentQuestion);
-                    dot.classList.toggle('answered', this.answers[index] !== undefined);
-                });
-            }
+                <?php endforeach; ?>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

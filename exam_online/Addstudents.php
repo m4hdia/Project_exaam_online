@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </select>
                     </div>
 
-                     <div class="form-group">
+                         <div class="form-group">
                         <label for="group_column" class="required">Group</label>
                         <select id="group_column" name="group_column" required>
                             <option value="" disabled selected>Select Group</option>
@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <option value="group2">GROUP 2</option>
                             <option value="group3">GROUP 3</option>
                         </select>
-                    </div>
+                        </div>
 
                 <button type="submit" class="btn-primary">
                     <i class="fas fa-plus"></i>

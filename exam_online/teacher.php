@@ -1,3 +1,4 @@
+
 <?php
 require_once 'config.php';
 
@@ -7,6 +8,8 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 try {
+      $stmt = $pdo->query("SELECT * FROM exams ORDER BY end_date DESC");
+    $exams = $stmt->fetchAll(PDO::FETCH_ASSOC);
   
     $stats = [
         'student' => $pdo->query("SELECT COUNT(*) FROM users where user_type='student' ")->fetchColumn(),
@@ -34,11 +37,191 @@ try {
     <link href="teacher.css" rel="stylesheet">
    
 </head>
+<style>
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+    animation: tableAppear 0.6s ease-out;
+}
+
+@keyframes tableAppear {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header Styling */
+thead {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+th {
+    padding: 18px 24px;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Row Styling */
+tr {
+    position: relative;
+}
+
+td {
+    padding: 16px 24px;
+    color: #4b5563;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.3s ease;
+}
+
+tbody tr:hover {
+    background: linear-gradient(45deg, #f8fafc, #f1f5f9);
+}
+
+tbody tr:hover td {
+    transform: translateX(5px);
+}
+
+/* Compact Action Buttons */
+.actions {
+    display: flex;
+    gap: 8px; /* Espace entre les boutons */
+    align-items: center; /* Alignement vertical */
+}
+
+/* Edit Button */
+.btn-edit {
+    background: #3b82f6; /* Couleur de fond */
+    color: white; /* Couleur du texte */
+    border: none; /* Pas de bordure */
+    border-radius: 6px; /* Coins arrondis */
+    padding: 8px 16px; /* Espacement intérieur */
+    font-size: 14px; /* Taille de la police */
+    font-weight: 500; /* Poids de la police */
+    cursor: pointer; /* Curseur en forme de main */
+    text-decoration: none; /* Pas de soulignement */
+    transition: background-color 0.3s ease; /* Transition fluide */
+    display: flex;
+    align-items: center;
+    gap: 6px; /* Espace entre l'icône et le texte */
+}
+
+.btn-edit:hover {
+    background: #2563eb; /* Couleur de fond au survol */
+}
+
+/* Delete Button */
+.btn-delete {
+    background: #ef4444; /* Couleur de fond */
+    color: white; /* Couleur du texte */
+    border: none; /* Pas de bordure */
+    border-radius: 6px; /* Coins arrondis */
+    padding: 8px 16px; /* Espacement intérieur */
+    font-size: 14px; /* Taille de la police */
+    font-weight: 500; /* Poids de la police */
+    cursor: pointer; /* Curseur en forme de main */
+    text-decoration: none; /* Pas de soulignement */
+    transition: background-color 0.3s ease; /* Transition fluide */
+    display: flex;
+    align-items: center;
+    gap: 6px; /* Espace entre l'icône et le texte */
+}
+
+.btn-delete:hover {
+    background: #dc2626; /* Couleur de fond au survol */
+}
+
+/* Button Icons */
+.btn i {
+    font-size: 14px; /* Taille des icônes */
+}
+
+/* Status Column */
+td:nth-child(5) {
+    position: relative;
+}
+
+td:nth-child(5)::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Timer Column */
+td:nth-child(6) {
+    font-family: monospace;
+    font-size: 15px;
+    color: #3b82f6;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Time's up animation */
+td:contains("Time's up!") {
+    color: #ef4444;
+    animation: flash 1.5s infinite;
+}
+
+@keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Completed status */
+td:contains("Completed") {
+    color: #10b981;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    table {
+        font-size: 14px;
+    }
+    
+    th, td {
+        padding: 12px 16px;
+    }
+    
+    .actions {
+        gap: 4px; /* Espace réduit entre les boutons */
+    }
+    
+    .btn {
+        padding: 6px 12px; /* Boutons plus compacts */
+        font-size: 13px; /* Taille de police réduite */
+    }
+}
+</style>
 <body>
    <aside class="sidebar">
-        <div class="logo">SchoolTeacher</div>
+        <div class="logo">Teacher</div>
         <nav class="nav-menu">
-            <a href="dashboard.php" class="nav-link active">
+            <a class="nav-link active">
                 <i class="fas fa-home"></i>
                 <span>Dashboard</span>
             </a>
@@ -90,26 +273,49 @@ try {
         </div>
 
     </div>
-    <section class="students-results">
-        <div class="card">
-            <h2 class="text-xl font-bold mb-4">Students and Results</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full bg-white rounded-lg">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="px-6 py-3 border-b">ID</th>
-                        <th class="px-6 py-3 border-b">Name</th>
-                        <th class="px-6 py-3 border-b">Email</th>
-                        <th class="px-6 py-3 border-b">Recent Exams</th>
-                        <th class="px-6 py-3 border-b">Average Score</th>
-                        <th class="px-6 py-3 border-b">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                   
-                </tbody>
-            </table>
-        </div>
+    <h1>Liste des Examens</h1>
+
+    <?php if (!empty($exams)): ?>
+       <table>
+    <thead>
+        <tr>
+            <th>Titre</th>
+            <th>Description</th>
+            <th>Date de début</th>
+            <th>Date de fin</th>
+            <th>Statut</th>
+            <th>Timer</th> <!-- Nouvelle colonne pour le timer -->
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($exams as $exam): ?>
+            <tr>
+                <td><?php echo htmlspecialchars($exam['title']); ?></td>
+                <td><?php echo htmlspecialchars($exam['description']); ?></td>
+                <td><?php echo htmlspecialchars($exam['start_date']); ?></td>
+                <td><?php echo htmlspecialchars($exam['end_date']); ?></td>
+                <td><?php echo htmlspecialchars($exam['status']); ?></td>
+                <td class="timer-cell" data-end-date="<?php echo htmlspecialchars($exam['end_date']); ?>">
+                    <!-- Le timer sera mis à jour par JavaScript -->
+                </td>
+                <td>
+                    <div class="actions">
+                        <a href="edit_exam.php?id=<?php echo $exam['id']; ?>" class="btn btn-edit">
+                            <i class="fas fa-edit"></i> Modifier
+                        </a>
+                        <a href="delete_exam.php?id=<?php echo $exam['id']; ?>" class="btn btn-delete">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
+    <?php else: ?>
+        <p>Aucun examen trouvé.</p>
+    <?php endif; ?>
     </div>
 
 
@@ -121,6 +327,69 @@ try {
 </main>
 
 <script>
+    function updateTimers() {
+    const timerCells = document.querySelectorAll('.timer-cell');
+    const now = new Date().getTime(); // Temps actuel en millisecondes
+
+    timerCells.forEach((cell) => {
+        const endDateStr = cell.getAttribute('data-end-date');
+        const endDate = new Date(endDateStr).getTime(); // Convertir la date de fin en millisecondes
+
+        if (isNaN(endDate)) {
+            cell.textContent = "Date invalide";
+            return;
+        }
+
+        const remainingTime = endDate - now; // Temps restant en millisecondes
+
+        if (remainingTime > 0) {
+            // Convertir le temps restant en heures, minutes et secondes
+            const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+            const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+
+            // Afficher le temps restant
+            cell.textContent = `${hours}h ${minutes}m ${seconds}s`;
+        } else {
+            cell.textContent = "Time's up!";
+        }
+    });
+}
+
+// Mettre à jour les timers toutes les secondes
+setInterval(updateTimers, 1000);
+
+// Initialiser les timers au chargement de la page
+window.onload = updateTimers;
+ function updateTimers() {
+        const timerCells = document.querySelectorAll('.timer-cell');
+        const now = new Date().getTime();
+
+        timerCells.forEach((cell) => {
+            const endDateStr = cell.getAttribute('data-end-date');
+            const endDate = new Date(endDateStr).getTime();
+
+            if (isNaN(endDate)) {
+                cell.textContent = "Date invalide";
+                return;
+            }
+
+            const remainingTime = endDate - now;
+
+            if (remainingTime > 0) {
+                const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+                const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+
+                cell.textContent = `${hours}h ${minutes}m ${seconds}s`;
+            } else {
+                cell.textContent = "Time's up!";
+            }
+        });
+    }
+
+    setInterval(updateTimers, 1000);
+    window.onload = updateTimers;
         
 
         const profileIcon = document.getElementById('profileIcon');
