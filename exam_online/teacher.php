@@ -1,13 +1,18 @@
 
 <?php
-require_once 'config.php';
-
 session_start();
-if (!isset($_SESSION['user_id'])) {
-    header('Location: Login.php');
+if (!isset($_SESSION['user_id']) ) {
+    header("Location: login.php");
     exit();
 }
+require_once 'config.php';
+
+
 try {
+    // Récupérer le nombre de demandes en attente
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE user_type = 'student' AND status = 'pending'");
+$stmt->execute();
+$pendingCount = $stmt->fetchColumn();
       $stmt = $pdo->query("SELECT * FROM exams ORDER BY end_date DESC");
     $exams = $stmt->fetchAll(PDO::FETCH_ASSOC);
   
@@ -38,6 +43,15 @@ try {
    
 </head>
 <style>
+/* Styles de base */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f8f9fa;
+    color: #333;
+}
+
 /* Table Styling */
 table {
     width: 100%;
@@ -49,7 +63,10 @@ table {
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
     animation: tableAppear 0.6s ease-out;
 }
-
+a {
+            text-decoration: none;
+            color: inherit; /* Optional: Keep link text the same color as the surrounding text */
+        }
 @keyframes tableAppear {
     from {
         opacity: 0;
@@ -199,24 +216,115 @@ td:contains("Completed") {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    /* Table adjustments */
     table {
-        font-size: 14px;
+        font-size: 12px;
     }
-    
+
     th, td {
-        padding: 12px 16px;
+        padding: 12px;
     }
-    
+
+    /* Hide less important columns on small screens */
+    td:nth-child(3), /* Date de début */
+    td:nth-child(4), /* Date de fin */
+    th:nth-child(3),
+    th:nth-child(4) {
+        display: none;
+    }
+
+    /* Adjust button sizes */
+    .btn-edit, .btn-delete {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    /* Stack buttons vertically on small screens */
     .actions {
-        gap: 4px; /* Espace réduit entre les boutons */
+        flex-direction: column;
+        gap: 4px;
     }
-    
-    .btn {
-        padding: 6px 12px; /* Boutons plus compacts */
-        font-size: 13px; /* Taille de police réduite */
+
+    /* Adjust header layout */
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .search-bar {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .user-menu {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    /* Adjust sidebar for mobile */
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        padding: 10px;
+    }
+
+    .nav-menu {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .nav-link {
+        flex: 1 1 45%;
+        text-align: center;
+    }
+
+    /* Adjust stats grid */
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .stat-card {
+        padding: 10px;
+    }
+
+    .stat-value {
+        font-size: 20px;
+    }
+
+    .stat-label {
+        font-size: 12px;
     }
 }
-</style>
+
+@media (max-width: 480px) {
+    /* Further adjustments for very small screens */
+    table {
+        font-size: 10px;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+
+    .btn-edit, .btn-delete {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+
+    .stat-card {
+        padding: 8px;
+    }
+
+    .stat-value {
+        font-size: 18px;
+    }
+
+    .stat-label {
+        font-size: 10px;
+    }
+}</style>
 <body>
    <aside class="sidebar">
         <div class="logo">Teacher</div>
@@ -246,7 +354,7 @@ td:contains("Completed") {
                 <input type="text" class="search-input" placeholder="Search..." id="searchInput">
             </div>
             <div class="user-menu">
-                <i class="fas fa-bell" id="notificationIcon" style="margin-right: 1rem; cursor: pointer;"></i>
+                <i class="fas fa-bell" id="notificationIcon" style="margin-right: 1rem; cursor: pointer;"><a href="tech.php"></a></i>
                 <div class="user-profile" style="display: inline-block; position: relative;">
                     <i class="fas fa-user-circle" style="font-size: 1.5rem; cursor: pointer;" id="profileIcon"></i>
                     <div class="profile-dropdown" style="display: none; position: absolute; right: 0; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 10px;">
@@ -316,6 +424,15 @@ td:contains("Completed") {
     <?php else: ?>
         <p>Aucun examen trouvé.</p>
     <?php endif; ?>
+    <div class="container">
+        <h1>Teacher Dashboard</h1>
+        <?php if ($pendingCount > 0): ?>
+            <div class="notification">
+                You have <?= $pendingCount ?> pending student approvals.
+                <a href="tech.php">Review now</a>
+            </div>
+        <?php endif; ?>
+    </div>
     </div>
 
 

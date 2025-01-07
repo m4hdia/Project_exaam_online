@@ -1,11 +1,14 @@
 <?php
 require_once 'config.php';
 
+
+
 session_start();
 if (!isset($_SESSION['user_id'])) {
     echo "You must be logged in to create an exam.";
     exit();
 }
+
 
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -87,7 +90,8 @@ try {
         $pdo->commit();
 
         // Display success message
-        echo "Exam created successfully!";
+       $_SESSION['success_message'] = "Exam Add successfully!";
+        header("Location: teacher.php");
     }
 } catch (Exception $e) {
     // Rollback on error

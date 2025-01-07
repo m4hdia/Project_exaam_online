@@ -2,344 +2,203 @@
 require_once 'config.php';
 
 session_start();
-if (!isset($_SESSION['user_id'])) {
-    header('Location: Login.php');
+if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'student') {
+    echo "You must be logged in as a student to access this page.";
     exit();
 }
-// Get available exams
-$stmt = $pdo->prepare("
-    SELECT e.id, e.title, e.description, e.duration, e.start_date, e.end_date,
-           CASE 
-               WHEN ea.completion_time IS NOT NULL THEN 'Completed'
-               WHEN NOW() BETWEEN e.start_date AND e.end_date THEN 'Available'
-               WHEN NOW() < e.start_date THEN 'Upcoming'
-               ELSE 'Expired'
-           END as status
-    FROM exams e
-    LEFT JOIN exam_attempts ea ON e.id = ea.exam_id 
-        AND ea.student_id = ?
-    WHERE e.is_active = 1
-    ORDER BY e.start_date DESC
-");
-$stmt->execute([$_SESSION['student_id']]);
-$exams = $stmt->fetchAll(PDO::FETCH_ASSOC);
-?>
 
+$student_id = $_SESSION['user_id'];
+
+// Fetch student status
+$stmt = $pdo->prepare("SELECT status FROM users WHERE user_id = ?");
+$stmt->execute([$student_id]);
+$student = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$student) {
+    echo "Student not found.";
+    exit();
+}
+
+$status = $student['status'];
+
+// Fetch exam data if student is accepted
+$exam = null;
+$questions = [];
+if ($status === 'accepted') {
+    // Fetch the latest exam
+    $stmt = $pdo->prepare("SELECT * FROM exams ORDER BY start_date DESC LIMIT 1");
+    $stmt->execute();
+    $exam = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($exam) {
+        // Fetch questions and answers for the exam
+        $stmt = $pdo->prepare("
+            SELECT 
+                q.id AS question_id,
+                q.question_text,
+                q.points,
+                q.type,
+                a.id AS answer_id,
+                a.answer_text,
+                a.is_correct
+            FROM questions q
+            LEFT JOIN answers a ON q.id = a.question_id
+            WHERE q.exam_id = ?
+        ");
+        $stmt->execute([$exam['id']]);
+        $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Available Exams</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Student Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .exam-section {
+            margin-bottom: 20px;
+        }
+        .exam-section h2 {
+            margin-bottom: 10px;
+        }
+        .exam-section p {
+            margin: 5px 0;
+        }
+        .exam-section .read-only {
+            color: #888;
+        }
+        .exam-section .interactive {
+            color: #28a745;
+        }
+        .exam-section .disabled {
+            color: #dc3545;
+        }
+        .exam-section button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .exam-section button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .mini-game {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .mini-game button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
 </head>
-<style>
-    :root {
-    --primary: #4f46e5;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --text: #1f2937;
-    --text-light: #6b7280;
-    --background: #f3f4f6;
-}
-
-body {
-    font-family: 'Inter', sans-serif;
-    background: var(--background);
-    margin: 0;
-    min-height: 100vh;
-}
-
-.dashboard {
-    display: flex;
-    min-height: 100vh;
-}
-
-/* Sidebar Styles */
-.sidebar {
-    width: 280px;
-    background: white;
-    padding: 2rem;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-    position: fixed;
-    height: 100vh;
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--primary);
-    margin-bottom: 3rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.nav-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.nav-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem;
-    border-radius: 12px;
-    color: var(--text);
-    text-decoration: none;
-    transition: all 0.2s ease;
-}
-
-.nav-item:hover {
-    background: #f3f4f6;
-}
-
-.nav-item.active {
-    background: var(--primary);
-    color: white;
-}
-
-/* Main Content */
-.main-content {
-    flex: 1;
-    margin-left: 280px;
-    padding: 2rem;
-}
-
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.page-header h1 {
-    font-size: 2rem;
-    font-weight: 600;
-    color: var(--text);
-}
-
-.student-info {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1.5rem;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-/* Exam Grid */
-.exam-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 2rem;
-}
-
-.exam-card {
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.exam-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-}
-
-.exam-status {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.exam-status.available {
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--success);
-}
-
-.exam-status.upcoming {
-    background: rgba(245, 158, 11, 0.1);
-    color: var(--warning);
-}
-
-.exam-status.completed {
-    background: rgba(79, 70, 229, 0.1);
-    color: var(--primary);
-}
-
-.exam-status.expired {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--danger);
-}
-
-.exam-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 1rem;
-}
-
-.exam-description {
-    color: var(--text-light);
-    margin-bottom: 1.5rem;
-    line-height: 1.5;
-}
-
-.exam-details {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.detail-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--text-light);
-    font-size: 0.875rem;
-}
-
-.start-exam-btn, .view-result-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 2rem;
-    border-radius: 12px;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all 0.2s ease;
-}
-
-.start-exam-btn {
-    background: var(--primary);
-    color: white;
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
-}
-
-.start-exam-btn:hover {
-    background: #4338ca;
-    transform: translateY(-2px);
-}
-
-.view-result-btn {
-    background: #f3f4f6;
-    color: var(--text);
-}
-
-.view-result-btn:hover {
-    background: #e5e7eb;
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-    .exam-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    }
-}
-
-@media (max-width: 768px) {
-    .dashboard {
-        flex-direction: column;
-    }
-    
-    .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-        padding: 1rem;
-    }
-    
-    .main-content {
-        margin-left: 0;
-        padding: 1rem;
-    }
-    
-    .exam-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
 <body>
-    <div class="dashboard">
-        <aside class="sidebar">
-            <div class="logo">
-                <i class="fas fa-graduation-cap"></i>
-                <span>Student Portal</span>
-            </div>
-            <nav class="nav-menu">
-                <a href="dashboard.php" class="nav-item">
-                    <i class="fas fa-home"></i>
-                    Dashboard
-                </a>
-                <a href="exams.php" class="nav-item active">
-                    <i class="fas fa-pen"></i>
-                    Exams
-                </a>
-                <a href="results.php" class="nav-item">
-                    <i class="fas fa-chart-bar"></i>
-                    Results
-                </a>
-            </nav>
-        </aside>
+    <div class="container">
+        <h1>Welcome, Student!</h1>
 
-        <main class="main-content">
-            <header class="page-header">
-                <h1>Available Exams</h1>
-                <div class="student-info">
-                    <i class="fas fa-user-circle"></i>
-                    <span><?php echo htmlspecialchars($_SESSION['student_name']); ?></span>
-                </div>
-            </header>
-
-            <div class="exam-grid">
-                <?php foreach ($exams as $exam): ?>
-                    <div class="exam-card">
-                        <div class="exam-status <?php echo strtolower($exam['status']); ?>">
-                            <?php echo $exam['status']; ?>
-                        </div>
-                        <h2 class="exam-title"><?php echo htmlspecialchars($exam['title']); ?></h2>
-                        <p class="exam-description"><?php echo htmlspecialchars($exam['description']); ?></p>
-                        <div class="exam-details">
-                            <div class="detail-item">
-                                <i class="fas fa-clock"></i>
-                                <span><?php echo $exam['duration']; ?> minutes</span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-calendar"></i>
-                                <span><?php echo date('M d, Y', strtotime($exam['start_date'])); ?></span>
-                            </div>
-                        </div>
-                        <?php if ($exam['status'] === 'Available'): ?>
-                            <a href="take_exam.php?id=<?php echo $exam['id']; ?>" 
-                               class="start-exam-btn"
-                               onclick="return confirm('Are you ready to start the exam? The timer will begin immediately.')">
-                                <i class="fas fa-play"></i>
-                                Start Exam
-                            </a>
-                        <?php elseif ($exam['status'] === 'Completed'): ?>
-                            <a href="view_result.php?id=<?php echo $exam['id']; ?>" class="view-result-btn">
-                                <i class="fas fa-eye"></i>
-                                View Result
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
+        <?php if ($status === 'rejected'): ?>
+            <!-- Rejected Student: Mini-Game and Rejection Message -->
+            <div class="exam-section">
+                <h2>Your Status: <span class="disabled">Rejected</span></h2>
+                <p>You cannot take the exam. Here's a mini-game to pass the time!</p>
             </div>
-        </main>
+            <div class="mini-game">
+                <p>Click the button to play:</p>
+                <button onclick="playMiniGame()">Play Mini-Game</button>
+                <p id="gameResult"></p>
+            </div>
+        <?php elseif ($status === 'pending'): ?>
+            <!-- Pending Student: Waiting Message -->
+            <div class="exam-section">
+                <h2>Your Status: <span class="read-only">Pending</span></h2>
+                <p>Your account is under review. Please wait for approval to take the exam.</p>
+            </div>
+        <?php elseif ($status === 'accepted' && $exam): ?>
+            <!-- Accepted Student: Exam Interface -->
+            <div class="exam-section">
+                <h2>Exam: <?= htmlspecialchars($exam['title']) ?></h2>
+                <p><strong>Description:</strong> <?= htmlspecialchars($exam['description']) ?></p>
+                <p><strong>Duration:</strong> <?= $exam['duration'] ?> minutes</p>
+                <p><strong>Status:</strong> <span class="interactive">Accepted (You can take the exam)</span></p>
+            </div>
+
+            <div class="exam-section">
+                <h2>Questions</h2>
+                <form id="examForm">
+                    <?php foreach ($questions as $question): ?>
+                        <div class="question">
+                            <p><strong>Question:</strong> <?= htmlspecialchars($question['question_text']) ?></p>
+                            <?php if ($question['type'] === 'mcq'): ?>
+                                <!-- Multiple Choice Question -->
+                                <?php
+                                $stmt = $pdo->prepare("SELECT * FROM answers WHERE question_id = ?");
+                                $stmt->execute([$question['question_id']]);
+                                $answers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                                ?>
+                                <?php foreach ($answers as $answer): ?>
+                                    <label>
+                                        <input type="radio" name="question_<?= $question['question_id'] ?>" value="<?= $answer['id'] ?>">
+                                        <?= htmlspecialchars($answer['answer_text']) ?>
+                                    </label><br>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <!-- Open-Ended Question -->
+                                <textarea name="question_<?= $question['question_id'] ?>" placeholder="Your answer"></textarea>
+                            <?php endif; ?>
+                        </div>
+                        <hr>
+                    <?php endforeach; ?>
+                    <button type="button" onclick="submitExam()">Submit Exam</button>
+                </form>
+            </div>
+        <?php else: ?>
+            <!-- No Exam Available -->
+            <div class="exam-section">
+                <h2>No Exam Available</h2>
+                <p>There are no exams available at the moment.</p>
+            </div>
+        <?php endif; ?>
     </div>
+
+    <script>
+        // Mini-Game Functionality
+        function playMiniGame() {
+            const result = Math.random() < 0.5 ? "You win!" : "You lose!";
+            document.getElementById("gameResult").textContent = result;
+        }
+
+        // Submit Exam Functionality
+        function submitExam() {
+            const form = document.getElementById("examForm");
+            const formData = new FormData(form);
+
+            // Simulate submitting the exam (replace with actual API call)
+            alert("Exam submitted! Your answers have been recorded.");
+            console.log("Submitted Answers:", Object.fromEntries(formData.entries()));
+        }
+    </script>
 </body>
 </html>

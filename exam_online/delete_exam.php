@@ -3,6 +3,10 @@
 
 // Inclure le fichier de configuration de la base de données
 require_once 'config.php';
+if (!isset($_SESSION['user_id']) && $_SESSION['user_type'] !== 'teacher') {
+    header("Location: login.php");
+    exit();
+}
 
 // Vérifier si l'ID de l'examen est passé en paramètre
 if (isset($_GET['id']) && !empty($_GET['id'])) {
