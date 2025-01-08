@@ -1,17 +1,10 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) ) {
+if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 require_once 'config.php';
-
-
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    echo "You must be logged in to edit an exam.";
-    exit();
-}
 
 $exam_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
@@ -21,7 +14,6 @@ if ($exam_id <= 0) {
 }
 
 try {
-    // Fetch exam details
     $stmt = $pdo->prepare("SELECT * FROM exams WHERE id = ?");
     $stmt->execute([$exam_id]);
     $exam = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -31,7 +23,6 @@ try {
         exit();
     }
 
-    // Fetch questions and answers
     $stmt = $pdo->prepare("
         SELECT 
             q.id AS question_id,
@@ -48,7 +39,6 @@ try {
     $stmt->execute([$exam_id]);
     $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Organize questions and answers
     $organized_questions = [];
     foreach ($questions as $row) {
         $question_id = $row['question_id'];
@@ -69,11 +59,9 @@ try {
         }
     }
 
-    // Handle form submission for updating the exam
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->beginTransaction();
 
-        // Update exam details
         $title = htmlspecialchars(trim($_POST['examTitle']));
         $description = htmlspecialchars(trim($_POST['examDescription']));
         $start_date = $_POST['examStartDate'];
@@ -91,14 +79,12 @@ try {
         ");
         $stmt->execute([$title, $description, $start_date, $end_date, $duration, $exam_id]);
 
-        // Process questions
         if (isset($_POST['questions']) && is_array($_POST['questions'])) {
             foreach ($_POST['questions'] as $question_id => $question) {
                 $q_text = htmlspecialchars(trim($question['text']));
                 $q_points = (int)$question['points'];
                 $q_type = isset($question['answers']) && is_array($question['answers']) ? 'mcq' : 'open';
 
-                // Update or insert question
                 if (isset($organized_questions[$question_id])) {
                     $stmt = $pdo->prepare("
                         UPDATE questions 
@@ -115,7 +101,6 @@ try {
                     $question_id = $pdo->lastInsertId();
                 }
 
-                // Process answers for MCQ
                 if ($q_type === 'mcq' && isset($question['answers'])) {
                     foreach ($question['answers'] as $answer_id => $answer) {
                         $a_text = htmlspecialchars(trim($answer['text']));
@@ -142,9 +127,8 @@ try {
 
         $pdo->commit();
 
-        // Display success message and redirect
         $_SESSION['success_message'] = "Exam updated successfully!";
-        header("Location: teacher.php"); // Redirect to the teacher's page
+        header("Location: teacher.php");
         exit();
     }
 } catch (Exception $e) {

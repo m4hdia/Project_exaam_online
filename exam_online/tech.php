@@ -3,16 +3,14 @@ require_once 'config.php';
 
 session_start();
 
-// Check if user is logged in and is a teacher
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'teacher') {
     header("Location: login.php");
     exit();
 }
 
-// Handle accept/reject actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $student_id = (int)$_POST['student_id'];
-    $action = $_POST['action']; // 'accept' or 'reject'
+    $action = $_POST['action'];
     
     if ($action === 'accept' || $action === 'reject') {
         $status = $action === 'accept' ? 'accepted' : 'rejected';
@@ -34,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch pending students with all relevant information
 $stmt = $pdo->prepare("
     SELECT user_id, first_name, last_name, email, fillier, group_column, status, created_at 
     FROM users 
@@ -55,7 +52,6 @@ $pendingStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="teacher-dashboard.css">
 </head>
 <style>
-    /* Modern theme variables */
 :root {
     --primary: #6366f1;
     --primary-dark: #4f46e5;
@@ -71,7 +67,6 @@ $pendingStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
     --card-bg: rgba(30, 41, 59, 0.8);
 }
 
-/* Base Styles */
 * {
     margin: 0;
     padding: 0;
@@ -86,7 +81,6 @@ body {
     min-height: 100vh;
 }
 
-/* Animated Background */
 .animated-background {
     position: fixed;
     width: 100vw;
@@ -110,7 +104,6 @@ body {
     opacity: 0.5;
 }
 
-/* Navbar Styles */
 .navbar {
     position: fixed;
     top: 0;
@@ -146,7 +139,6 @@ body {
     align-items: center;
 }
 
-/* Main Content Styles */
 .main-content {
     padding-top: 5rem;
     min-height: 100vh;
@@ -175,7 +167,6 @@ body {
     color: var(--text-secondary);
 }
 
-/* Student Grid */
 .students-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -183,7 +174,6 @@ body {
     margin-top: 2rem;
 }
 
-/* Student Card */
 .student-card {
     background: var(--card-bg);
     border-radius: 1rem;
@@ -235,7 +225,6 @@ body {
     gap: 1rem;
 }
 
-/* Buttons */
 .btn, .btn-secondary, .btn-accept, .btn-reject {
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
@@ -279,7 +268,6 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Alert Messages */
 .alert {
     padding: 1rem;
     border-radius: 0.5rem;
@@ -307,7 +295,6 @@ body {
     color: var(--error);
 }
 
-/* No Students Message */
 .no-students {
     grid-column: 1 / -1;
     text-align: center;
@@ -332,7 +319,6 @@ body {
     color: var(--text-secondary);
 }
 
-/* Loading Animation */
 .loading {
     position: fixed;
     top: 0;
@@ -346,18 +332,14 @@ body {
     z-index: 9999;
     transition: opacity 0.5s ease;
 }
-
 </style>
 <body>
-    <!-- Loading Screen -->
     <div class="loading" id="loading">
         <div class="loading-spinner"></div>
     </div>
 
-    <!-- Animated Background -->
     <div class="animated-background"></div>
 
-    <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-content">
             <a href="#" class="logo">
@@ -372,7 +354,6 @@ body {
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="main-content">
         <section class="dashboard-section">
             <div class="container">
@@ -433,7 +414,6 @@ body {
     </main>
 
     <script>
-        // Loading Screen
         window.addEventListener('load', function() {
             const loader = document.getElementById('loading');
             setTimeout(() => {

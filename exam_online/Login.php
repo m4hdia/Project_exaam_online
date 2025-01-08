@@ -33,7 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $error = 'Please fill in all fields.';
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -44,10 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>ExamOnline</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="login.css">
-   
-</head>
-<style>
-       :root {
+    <style>
+        :root {
             --primary: #4f46e5;
             --secondary: #7c3aed;
             --accent: #06b6d4;
@@ -63,19 +60,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             box-sizing: border-box;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
-        
+
         body {
             background: var(--background);
             color: var(--text);
             line-height: 1.6;
             overflow-x: hidden;
         }
+
         a {
             text-decoration: none;
-            color: inherit; /* Optional: Keep link text the same color as the surrounding text */
+            color: inherit;
         }
 
-        /* Animated Background */
         .animated-background {
             position: fixed;
             width: 100vw;
@@ -104,7 +101,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             100% { transform: rotate(360deg); }
         }
 
-        /* Navbar */
         .navbar {
             position: fixed;
             top: 0;
@@ -145,13 +141,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             transform: scale(1.2) rotate(360deg);
         }
 
-        /* Main Content */
         .main-content {
             padding-top: 100px;
             min-height: 100vh;
         }
 
-        /* Hero Section */
         .hero {
             padding: 4rem 5%;
             display: flex;
@@ -195,7 +189,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             max-width: 600px;
         }
 
-        /* Login Card */
         .login-card {
             background: var(--card-bg);
             backdrop-filter: blur(20px);
@@ -232,7 +225,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             50% { transform: translateY(-5px); }
         }
 
-        /* Form Styles */
         .form-group {
             margin-bottom: 1.5rem;
             position: relative;
@@ -270,7 +262,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             color: #94a3b8;
         }
 
-        /* Button Styles */
         .btn {
             width: 100%;
             padding: 1rem;
@@ -284,7 +275,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            
         }
 
         .btn::before {
@@ -305,11 +295,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             height: 300px;
         }
 
-      
         .features {
             padding: 4rem 5%;
             background: rgba(30, 41, 59, 0.5);
         }
+
         .features-grid {
             max-width: 1400px;
             margin: 0 auto;
@@ -353,7 +343,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             color: #94a3b8;
         }
 
-        /* Animations */
         @keyframes slideInLeft {
             from {
                 opacity: 0;
@@ -374,7 +363,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 opacity: 1;
                 transform: translateY(0);
             }
-        }       
+        }
+
         .error-message {
             background: rgba(220, 38, 38, 0.1);
             color: #ef4444;
@@ -391,7 +381,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             75% { transform: translateX(5px); }
         }
 
-        /* Responsive Design */
         @media (max-width: 1024px) {
             .hero-container {
                 grid-template-columns: 1fr;
@@ -417,7 +406,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
 
-        /* Loading Animation */
         .loading {
             position: fixed;
             top: 0;
@@ -443,152 +431,150 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         @keyframes spin {
             100% { transform: rotate(360deg); }
         }
-.bt {
-    display: inline-block;
-    padding: 10px 20px;
-    font-size: 16px;
-    font-weight: 600;
-    color:rgb(238, 237, 241); /* Couleur du texte bleue */
-    background-color: #4f46e5;;/* Fond transparent */
-    border: 2px solidrgb(252, 253, 255); /* Bordure bleue */
-    border-radius: 5px; /* Bordures légèrement arrondies */
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: none;
-    
-}
 
-.bt:hover {
-    color: white; /* Texte blanc au survol */
-    background-color:rgba(79, 44, 204, 0.67); /* Fond bleu au survol */
-    border-color:rgb(202, 210, 219); /* Bordure bleue au survol */
-    transform: scale(1.05); /* Légère mise à l'échelle */
-}
+        .bt {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: rgb(238, 237, 241);
+            background-color: #4f46e5;
+            border: 2px solid rgb(252, 253, 255);
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: none;
+        }
 
-.bt:active {
-    transform: scale(1); /* Retour à la taille normale au clic */
-    background-color: #0056b3; /* Fond bleu plus foncé au clic */
-    border-color: #0056b3; /* Bordure bleue plus foncée au clic */
-}
-.footer {
-    background:rgb(0, 1, 8); /* Couleur de fond sombre */
-    color: white;
-    padding: 40px 20px;
-    font-family: 'Poppins', sans-serif;
-}
+        .bt:hover {
+            color: white;
+            background-color: rgba(79, 44, 204, 0.67);
+            border-color: rgb(202, 210, 219);
+            transform: scale(1.05);
+        }
 
-.footer-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    max-width: 1200px;
-    margin: 0 auto;
-    gap: 20px;
-}
+        .bt:active {
+            transform: scale(1);
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
 
-.footer-section {
-    flex: 1;
-    min-width: 200px;
-    margin-bottom: 20px;
-}
+        .footer {
+            background: rgb(0, 1, 8);
+            color: white;
+            padding: 40px 20px;
+            font-family: 'Poppins', sans-serif;
+        }
 
-.footer-section h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 15px;
-    color: #fff;
-}
+        .footer-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 20px;
+        }
 
-.footer-section p {
-    font-size: 14px;
-    line-height: 1.6;
-    color: #ddd;
-}
+        .footer-section {
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 20px;
+        }
 
-.footer-section ul {
-    list-style: none;
-    padding: 0;
-}
+        .footer-section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #fff;
+        }
 
-.footer-section ul li {
-    margin-bottom: 10px;
-}
+        .footer-section p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #ddd;
+        }
 
-.footer-section ul li a {
-    color: #ddd;
-    text-decoration: none;
-    font-size: 14px;
-    transition: color 0.3s ease;
-}
+        .footer-section ul {
+            list-style: none;
+            padding: 0;
+        }
 
-.footer-section ul li a:hover {
-    color: #2575fc; /* Couleur au survol */
-}
+        .footer-section ul li {
+            margin-bottom: 10px;
+        }
 
-.footer-section ul li i {
-    margin-right: 10px;
-    color: #2575fc; /* Couleur des icônes */
-}
+        .footer-section ul li a {
+            color: #ddd;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
 
-.social-icons {
-    display: flex;
-    gap: 10px;
-}
+        .footer-section ul li a:hover {
+            color: #2575fc;
+        }
 
-.social-icon {
-    color: #fff;
-    background: #2575fc;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: background 0.3s ease;
-}
+        .footer-section ul li i {
+            margin-right: 10px;
+            color: #2575fc;
+        }
 
-.social-icon:hover {
-    background: #1a5bbf; /* Couleur au survol */
-}
+        .social-icons {
+            display: flex;
+            gap: 10px;
+        }
 
-.footer-bottom {
-    text-align: center;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 14px;
-    color: #ddd;
-}
+        .social-icon {
+            color: #fff;
+            background: #2575fc;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: background 0.3s ease;
+        }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .footer-container {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
+        .social-icon:hover {
+            background: #1a5bbf;
+        }
 
-    .footer-section {
-        margin-bottom: 30px;
-    }
+        .footer-bottom {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+            color: #ddd;
+        }
 
-    .social-icons {
-        justify-content: center;
-    }
-}
-</style>
+        @media (max-width: 768px) {
+            .footer-container {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .footer-section {
+                margin-bottom: 30px;
+            }
+
+            .social-icons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
 <body>
-    <!-- Loading Screen -->
     <div class="loading" id="loading">
         <div class="loading-spinner"></div>
     </div>
 
-    <!-- Animated Background -->
     <div class="animated-background"></div>
 
-    <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-content">
             <a href="#" class="logo">
@@ -601,7 +587,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="main-content">
         <section class="hero">
             <div class="hero-container">
@@ -610,11 +595,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <p>Experience the next generation of online examination. Advanced features, real-time results, and a seamless learning experience designed for modern education.</p>
                 </div>
 
-                <div class="login-card" >
-                    <h2><i class="fas fa-user-graduate"></i>  Login</h2>
-                  <?php if (!empty($error)): ?>
-    <div class="error" style="color: red;"><?= htmlspecialchars($error) ?></div>
-<?php endif; ?>
+                <div class="login-card">
+                    <h2><i class="fas fa-user-graduate"></i> Login</h2>
+                    <?php if (!empty($error)): ?>
+                        <div class="error" style="color: red;"><?= htmlspecialchars($error) ?></div>
+                    <?php endif; ?>
 
                     <form method="POST" action="">
                         <div class="form-group">
@@ -630,11 +615,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <button type="submit" class="btn">
                             Sign In <i class="fas fa-arrow-right"></i>
                         </button>
-                        
                     </form>
-                     <div style="text-align: center; margin-top: 10px;">
-        <a href="register.php" class="bt">Create Account</a>
-    </div>
+                    <div style="text-align: center; margin-top: 10px;">
+                        <a href="register.php" class="bt">Create Account</a>
+                    </div>
                 </div>
             </div>
         </section>
@@ -662,89 +646,74 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <p>Access your exams on any device, anywhere, anytime.</p>
                 </div>
                 <div class="feature-card">
-                    
-  
                     <i class="fa-solid fa-gears" style="color: #0fb6cc;"></i>
                     <h3>Entre faste</h3>
-                    <p>Easily access your exams anytime, on any device, wherever life takes you."</p>
+                    <p>Easily access your exams anytime, on any device, wherever life takes you.</p>
                 </div>
-
                 <div class="feature-card">
                     <i class="fa-solid fa-magnifying-glass" style="color: #0fb6cc;"></i>
                     <h3>Learn Anywhere</h3>
-                    <p>Access your exams effortlessly on any device,</p>
+                    <p>Access your exams effortlessly on any device.</p>
                 </div>
             </div>
         </section>
     </main>
+
     <footer class="footer">
-    <div class="footer-container">
-        <!-- Section À propos -->
-        <div class="footer-section">
-            <h3>About ExamOnline</h3>
-            <p>ExamOnline is a cutting-edge platform designed to revolutionize online examinations. We provide advanced features, real-time analytics, and a seamless experience for both students and teachers.</p>
-        </div>
-
-    
-
-        <!-- Contact -->
-        <div class="footer-section">
-            <h3>Contact Us</h3>
-            <ul>
-                <li><i class="fas fa-map-marker-alt"></i> 123 Education Street, Knowledge City</li>
-                <li><i class="fas fa-phone"></i> +1 234 567 890</li>
-                <li><i class="fas fa-envelope"></i> mahdiazou33@gmail.com</li>
-            </ul>
-        </div>
-
-        <!-- Réseaux sociaux -->
-        <div class="footer-section">
-            <h3>Follow Us</h3>
-            <div class="social-icons">
-                <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-                <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
-                <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-                <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>About ExamOnline</h3>
+                <p>ExamOnline is a cutting-edge platform designed to revolutionize online examinations. We provide advanced features, real-time analytics, and a seamless experience for both students and teachers.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Contact Us</h3>
+                <ul>
+                    <li><i class="fas fa-map-marker-alt"></i> 123 Education Street, Knowledge City</li>
+                    <li><i class="fas fa-phone"></i> +1 234 567 890</li>
+                    <li><i class="fas fa-envelope"></i> mahdiazou33@gmail.com</li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Follow Us</h3>
+                <div class="social-icons">
+                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                </div>
             </div>
         </div>
-    </div>
+        <div class="footer-bottom">
+            <p>&copy; 2023 ExamOnline. All rights reserved.</p>
+        </div>
+    </footer>
 
-    <!-- Copyright -->
-    <div class="footer-bottom">
-        <p>&copy; 2023 ExamOnline. All rights reserved.</p>
-    </div>
-</footer>
-
-   <script>
-    // Loading Screen
-    window.addEventListener('load', function() {
-        const loader = document.getElementById('loading');
-        setTimeout(() => {
-            loader.style.opacity = '0';
+    <script>
+        window.addEventListener('load', function() {
+            const loader = document.getElementById('loading');
             setTimeout(() => {
-                loader.style.display = 'none';
-            }, 500);
-        }, 1000);
-    });
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 500);
+            }, 1000);
+        });
 
-    // Smooth Scroll
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            document.querySelector(this.getAttribute('href')).scrollIntoView({
-                behavior: 'smooth'
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
             });
         });
-    });
 
-    // Dynamic Background Animation
-    const background = document.querySelector('.animated-background');
-    document.addEventListener('mousemove', function(e) {
-        const x = e.clientX / window.innerWidth;
-        const y = e.clientY / window.innerHeight;
-        background.style.transform = `translate(${x * 10}px, ${y * 10}px)`;
-    });
-</script>
-
+        const background = document.querySelector('.animated-background');
+        document.addEventListener('mousemove', function(e) {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            background.style.transform = `translate(${x * 10}px, ${y * 10}px)`;
+        });
+    </script>
 </body>
 </html>

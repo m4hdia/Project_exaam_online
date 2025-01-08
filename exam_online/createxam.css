@@ -1,284 +1,360 @@
+/* Modern Exam Creator Styles */
+:root {
+    --primary-color: #4F46E5;
+    --primary-hover: #4338CA;
+    --secondary-color: #6B7280;
+    --success-color: #10B981;
+    --danger-color: #EF4444;
+    --background-color: #F3F4F6;
+    --card-background: #FFFFFF;
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --border-color: #E5E7EB;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --transition: all 0.3s ease;
+}
 
-        :root {
-            --bg-gradient: linear-gradient(135deg, #f6f8ff 0%, #ffffff 100%);
-            --primary: #4f46e5;
-            --primary-light: #818cf8;
-            --success: #10b981;
-            --danger: #ef4444;
-            --card-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.1);
-            --card-glow: 0 0 20px rgba(79, 70, 229, 0.1);
-        }
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+}
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
+.container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
 
-        body {
-            background: var(--bg-gradient);
-            min-height: 100vh;
-            padding: 2rem;
-            color: #1f2937;
-        }
+.header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
+.header h1 {
+    font-size: 2.5rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
 
-        .header {
-            text-align: center;
-            margin-bottom: 3rem;
-            animation: fadeInDown 0.8s ease;
-        }
+.header p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
 
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+.card {
+    background: var(--card-background);
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
 
-        .exam-form {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
+.card:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
 
-        .card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border-radius: 24px;
-            padding: 2rem;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
-            animation: slideInUp 0.5s ease;
-        }
+.question-card {
+    border-left: 4px solid var(--primary-color);
+}
 
-        .card:hover {
-            box-shadow: var(--card-glow);
-            transform: translateY(-4px);
-        }
+.input-group {
+    margin-bottom: 1.5rem;
+}
 
-        .input-group {
-            margin-bottom: 1.5rem;
-        }
+.input-group label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
 
-        .input-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-            font-size: 1.1rem;
-            color: #374151;
-        }
+.input-field {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: var(--transition);
+    outline: none;
+}
 
-        .input-field {
-            width: 100%;
-            padding: 1rem 1.25rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 16px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.8);
-        }
+.input-field:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
 
-        .input-field:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
-            background: white;
-        }
+textarea.input-field {
+    min-height: 100px;
+    resize: vertical;
+}
 
-        .question-card {
-            position: relative;
-            overflow: hidden;
-            animation: scaleIn 0.4s ease;
-        }
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
 
-        .question-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
+.question-type {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    color: var(--primary-color);
+}
 
-        .question-type {
-            padding: 0.75rem 1.5rem;
-            border-radius: 100px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            background: rgba(79, 70, 229, 0.1);
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+.question-type i {
+    font-size: 1.2rem;
+}
 
-        .answer-option {
-            background: #f8fafc;
-            border-radius: 16px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            gap: 1rem;
-            align-items: center;
-            animation: slideInLeft 0.3s ease;
-            transition: all 0.3s ease;
-        }
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    justify-content: center;
+}
 
-        .answer-option:hover {
-            background: #f1f5f9;
-            transform: scale(1.02);
-        }
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
 
-        .checkbox-wrapper {
-            position: relative;
-        }
+.btn i {
+    font-size: 1.1rem;
+}
 
-        .custom-checkbox {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
 
-        .custom-checkbox:checked {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
 
-        .btn {
-            padding: 1rem 2rem;
-            border-radius: 16px;
-            border: none;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            transition: all 0.3s ease;
-        }
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: white;
+}
 
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
+.btn-secondary:hover {
+    background-color: #4B5563;
+}
 
-        .btn-primary:hover {
-            background: #4338ca;
-            transform: translateY(-2px);
-        }
+.delete-btn {
+    background: transparent;
+    border: none;
+    color: var(--danger-color);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    transition: var(--transition);
+}
 
-        .btn-secondary {
-            background: #f1f5f9;
-            color: #475569;
-        }
+.delete-btn:hover {
+    background-color: #FEE2E2;
+}
 
-        .btn-secondary:hover {
-            background: #e2e8f0;
-            transform: translateY(-2px);
-        }
+.answer-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    background-color: #F9FAFB;
+    transition: var(--transition);
+}
 
-        .action-buttons {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            animation: fadeInUp 0.5s ease;
-        }
+.answer-option:hover {
+    background-color: #F3F4F6;
+}
 
-        .delete-btn {
-            background: none;
-            border: none;
-            padding: 0.5rem;
-            cursor: pointer;
-            color: #94a3b8;
-            border-radius: 12px;
-            transition: all 0.2s ease;
-        }
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+}
 
-        .delete-btn:hover {
-            color: var(--danger);
-            background: #fee2e2;
-        }
+.custom-checkbox {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 0.25rem;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    transition: var(--transition);
+}
 
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+.custom-checkbox:checked {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
 
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+/* File upload styling */
+input[type="file"] {
+    padding: 0.5rem;
+}
 
-        @keyframes scaleIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
+input[type="file"]::file-selector-button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid var(--border-color);
+    background-color: white;
+    cursor: pointer;
+    transition: var(--transition);
+}
 
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
+input[type="file"]::file-selector-button:hover {
+    background-color: #F3F4F6;
+}
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
-        @media (max-width: 768px) {
-            body {
-                padding: 1rem;
-            }
+.question-card {
+    animation: slideIn 0.3s ease-out;
+}
 
-            .header h1 {
-                font-size: 2rem;
-            }
+/* Loading state */
+.btn.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
 
-            .action-buttons {
-                flex-direction: column;
-            }
+.btn.loading::after {
+    content: "";
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    border-top-color: currentColor;
+    animation: spin 0.8s linear infinite;
+}
 
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-  
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        margin: 1rem auto;
+    }
+
+    .card {
+        padding: 1.5rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .header h1 {
+        font-size: 2rem;
+    }
+}
+
+/* Success message animation */
+.success-message {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background-color: var(--success-color);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow);
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+/* Custom style for date-time inputs */
+.custom-datetime {
+    position: relative;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: var(--transition);
+    outline: none;
+    background-color: var(--card-background);
+    color: var(--text-primary);
+}
+
+.custom-datetime::before {
+    content: attr(placeholder);
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    pointer-events: none;
+    transition: var(--transition);
+}
+
+.custom-datetime:focus::before,
+.custom-datetime:not(:placeholder-shown)::before {
+    top: 0;
+    left: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--primary-color);
+    background-color: var(--card-background);
+    padding: 0 0.25rem;
+}
+
+/* Style for duration input */
+.input-field[type="number"] {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: var(--transition);
+    outline: none;
+    background-color: var(--card-background);
+    color: var(--text-primary);
+}
+
+.input-field[type="number"]::placeholder {
+    color: var(--text-secondary);
+}
