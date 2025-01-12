@@ -332,6 +332,108 @@ body {
     z-index: 9999;
     transition: opacity 0.5s ease;
 }
+@media (max-width: 1200px) {
+    .container {
+        padding: 2rem 3%;
+    }
+
+    .students-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 992px) {
+    .dashboard-header h1 {
+        font-size: 2rem;
+    }
+
+    .students-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .student-card {
+        padding: 1.2rem;
+    }
+
+    .student-info {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .student-avatar {
+        margin-bottom: 1rem;
+    }
+
+    .student-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .btn-accept, .btn-reject {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-header h1 {
+        font-size: 1.75rem;
+    }
+
+    .students-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .student-details h3 {
+        font-size: 1.1rem;
+    }
+
+    .student-details p {
+        font-size: 0.8rem;
+    }
+
+    .nav-links {
+        gap: 0.5rem;
+    }
+
+    .btn, .btn-secondary {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .students-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .student-card {
+        padding: 1rem;
+    }
+
+    .student-details h3 {
+        font-size: 1rem;
+    }
+
+    .student-details p {
+        font-size: 0.75rem;
+    }
+
+    .nav-links {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .btn, .btn-secondary {
+        width: 100%;
+        text-align: center;
+    }
+}
 </style>
 <body>
     <div class="loading" id="loading">

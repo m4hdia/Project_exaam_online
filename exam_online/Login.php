@@ -16,8 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($user && $password === $user['password']) { 
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['user_type'] = $user['user_type'];
+            $_SESSION['user_type'] = $user['user_type'];
             $_SESSION['name'] = $user['first_name'] . ' ' . $user['last_name'];
             switch ($user['user_type']) {
+                case 'admin':
+                    header("Location: admin.php");
+                    break;
                 case 'teacher':
                     header("Location: teacher.php");
                     break;

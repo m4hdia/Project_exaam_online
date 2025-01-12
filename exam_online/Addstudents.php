@@ -45,17 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Add Student</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary: #4f46e5;
-            --secondary: #7c3aed;
-            --accent: #06b6d4;
-            --success: #10b981;
-            --error: #ef4444;
-            --background: #0f172a;
-            --text: #f8fafc;
-            --card-bg: rgba(30, 41, 59, 0.7);
-        }
-
         * {
             margin: 0;
             padding: 0;
@@ -64,239 +53,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         body {
-            background: var(--background);
-            color: var(--text);
+            background: linear-gradient(135deg, rgb(8, 43, 71) 0%, rgb(14, 13, 99) 100%);
             min-height: 100vh;
+            color: #fff;
         }
 
-        .nav-toggle {
-            display: none;
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 1002;
-            background: rgba(255, 255, 255, 0.1);
+        .custom-gradient {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
             backdrop-filter: blur(10px);
-            border: none;
-            padding: 0.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .nav-toggle i {
-            color: var(--text);
-            font-size: 1.5rem;
-        }
-
-        .nav-toggle:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            width: 280px;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px);
-            z-index: 1001;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .sidebar-header {
-            padding: 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            font-size: 1.5rem;
-            color: var(--text);
-        }
-
-        .logo i {
-            color: var(--primary);
-            animation: float 3s ease-in-out infinite;
-        }
-
-        .nav-menu {
-            padding: 2rem;
-            flex: 1;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            color: var(--text);
-            text-decoration: none;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            margin-bottom: 0.5rem;
-        }
-
-        .nav-link:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(5px);
-        }
-
-        .nav-link.active {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-        }
-
-        .nav-link i {
-            font-size: 1.2rem;
-            min-width: 24px;
-        }
-
-        .sidebar-footer {
-            padding: 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .container {
-            margin-left: 280px;
-            padding: 2rem;
-            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @media (max-width: 1024px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
-            .nav-toggle {
-                display: block;
-            }
-
-            .container {
-                margin-left: 0;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .header h1 {
-                font-size: 2rem;
-            }
-        }
-
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .overlay.active {
-            display: block;
-            opacity: 1;
-        }
-
-        @media (max-width: 480px) {
-            .sidebar {
-                width: 100%;
-                max-width: 300px;
-            }
-
-            .form-card {
-                padding: 1.5rem;
-            }
-
-            .btn-primary {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .alert {
-                margin: 1rem;
-            }
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
-            animation: fadeIn 0.5s ease;
+            animation: fadeScale 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         .header {
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            margin-bottom: 3rem;
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--text);
-            background: linear-gradient(135deg, #fff, #a5b4fc);
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #fff, #e0e7ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
         .alert {
             padding: 1rem 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 500;
-            animation: slideInDown 0.4s ease;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            animation: slideIn 0.5s ease;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .alert-success {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            color: #34d399;
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.4);
         }
 
         .alert-error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: #f87171;
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
         }
 
         .form-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border-radius: 16px;
-            padding: 2.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 2rem;
+            padding: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: fadeScale 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         .form-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
+            gap: 2rem;
             margin-bottom: 2rem;
         }
 
@@ -304,114 +130,108 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             position: relative;
         }
 
-        .form-floating input,
-        .form-floating select {
+        .form-control {
             width: 100%;
-            padding: 1rem;
+            padding: 1rem 1.5rem;
             font-size: 1rem;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            color: var(--text);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            color: #fff;
             transition: all 0.3s ease;
         }
 
-        .form-floating input:focus,
-        .form-floating select:focus {
+        .form-control:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+            border-color: #fff;
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
         }
 
-        .form-floating label {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: transparent;
-            padding: 0 0.5rem;
+        .form-control::placeholder {
             color: rgba(255, 255, 255, 0.6);
-            transition: all 0.3s ease;
-            pointer-events: none;
         }
 
-        .form-floating input:focus ~ label,
-        .form-floating input:not(:placeholder-shown) ~ label {
-            top: 0;
-            transform: translateY(-50%) scale(0.85);
-            background: rgba(15, 23, 42, 0.6);
-            color: var(--primary);
-        }
-
-        select {
-            width: 100%;
-            padding: 1rem;
-            font-size: 1rem;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            color: var(--text);
-            cursor: pointer;
+        select.form-control {
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 1rem center;
             background-size: 1.5rem;
-        }
-
-        select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+            padding-right: 3rem;
         }
 
         .btn-primary {
             display: inline-flex;
             align-items: center;
             gap: 0.75rem;
-            padding: 1rem 2rem;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--text);
+            padding: 1.25rem 2.5rem;
+            background: #fff;
+            color: #6366f1;
             border: none;
-            border-radius: 12px;
-            font-size: 1rem;
+            border-radius: 1rem;
+            font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 8px 12px -1px rgba(0, 0, 0, 0.2);
         }
 
         .btn-primary:active {
             transform: translateY(0);
         }
 
-        .btn-primary i {
-            font-size: 1.1rem;
+        .btn-routeur {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-top: 1rem;
+            text-decoration: none; /* Remove link decoration */
         }
 
-        @keyframes fadeIn {
-            from {
+        .btn-routeur:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-routeur:active {
+            transform: translateY(0);
+        }
+
+        @keyframes fadeScale {
+            0% { 
                 opacity: 0;
+                transform: scale(0.95);
             }
-            to {
+            100% { 
                 opacity: 1;
+                transform: scale(1);
             }
         }
 
-        @keyframes slideInDown {
-            from {
-                transform: translateY(-1rem);
+        @keyframes slideIn {
+            0% {
                 opacity: 0;
+                transform: translateY(-20px);
             }
-            to {
+            100% {
+                opacity: 1;
                 transform: translateY(0);
-                opacity: 1;
             }
         }
 
@@ -420,19 +240,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 padding: 1rem;
             }
 
-            .header h1 {
-                font-size: 2rem;
-            }
-
             .form-grid {
                 grid-template-columns: 1fr;
+                gap: 1rem;
             }
 
             .form-card {
                 padding: 1.5rem;
             }
 
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
             .btn-primary {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .btn-routeur {
                 width: 100%;
                 justify-content: center;
             }
@@ -440,35 +266,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-    <div class="animated-background"></div>
-    <button class="nav-toggle">
-        <i class="fas fa-bars"></i>
-    </button>
-    <div class="overlay"></div>
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">
-                <i class="fas fa-graduation-cap"></i>
-                <span>Student Portal</span>
-            </div>
-        </div>
-        <nav class="nav-menu">
-            <a href="#" class="nav-link active">
-                <i class="fas fa-user-plus"></i>
-                <span>Add Student</span>
-            </a>
-        </nav>
-        <div class="sidebar-footer">
-            <a href="teacher.php" class="nav-link">
-                <i class="fas fa-arrow-left"></i>
-                <span>Back to Teacher Page</span>
-            </a>
-        </div>
-    </aside>
     <div class="container">
         <div class="header">
             <h1>Add New Student</h1>
+            <p>Enter student details to create a new account</p>
+            <!-- Routeur Button -->
+            <button onclick="window.location.href='teacher.php'" class="btn-routeur">
+                <i class="fas fa-arrow-left"></i>
+                Routeur
+            </button>
         </div>
+
         <?php if (isset($_SESSION['success_message'])): ?>
             <div class="alert alert-success">
                 <?php 
@@ -477,6 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ?>
             </div>
         <?php endif; ?>
+
         <?php if (isset($_SESSION['error_message'])): ?>
             <div class="alert alert-error">
                 <?php 
@@ -485,34 +294,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ?>
             </div>
         <?php endif; ?>
+
         <div class="form-card">
             <form action="" method="POST">
                 <div class="form-grid">
-                    <div class="form-group form-floating">
-                        <input type="text" id="first_name" name="first_name" placeholder=" " required>
-                        <label for="first_name">First Name</label>
-                    </div>
-                    <div class="form-group form-floating">
-                        <input type="text" id="last_name" name="last_name" placeholder=" " required>
-                        <label for="last_name">Last Name</label>
-                    </div>
-                    <div class="form-group form-floating">
-                        <input type="email" id="email" name="email" placeholder=" " required>
-                        <label for="email">Email Address</label>
-                    </div>
-                    <div class="form-group form-floating">
-                        <input type="password" id="password" name="password" placeholder=" " required>
-                        <label for="password">Password</label>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="first_name" name="first_name" 
+                               placeholder="First Name" required>
                     </div>
                     <div class="form-group">
-                        <select id="fillier" name="fillier" required>
+                        <input type="text" class="form-control" id="last_name" name="last_name" 
+                               placeholder="Last Name" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" class="form-control" id="email" name="email" 
+                               placeholder="Email Address" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Password" required>
+                    </div>
+                    <div class="form-group">
+                        <select class="form-control" id="fillier" name="fillier" required>
                             <option value="">Select Field of Study</option>
                             <option value="developpement digital">Developpement Digital</option>
                             <option value="gestion entreprise">Gestion Entreprise</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <select id="group_column" name="group_column" required>
+                        <select class="form-control" id="group_column" name="group_column" required>
                             <option value="">Select Group</option>
                             <option value="group1">Group 1</option>
                             <option value="group2">Group 2</option>
@@ -521,34 +331,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
                 <button type="submit" class="btn-primary">
-                    <i class="fas fa-plus"></i>
+                    <i class="fas fa-plus-circle"></i>
                     Add Student
                 </button>
             </form>
         </div>
     </div>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const navToggle = document.querySelector('.nav-toggle');
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.querySelector('.overlay');
-
-        navToggle.addEventListener('click', toggleMenu);
-        overlay.addEventListener('click', toggleMenu);
-
-        function toggleMenu() {
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('active');
-            navToggle.querySelector('i').classList.toggle('fa-bars');
-            navToggle.querySelector('i').classList.toggle('fa-times');
-        }
-
-        window.addEventListener('resize', () => {
-            if (window.innerWidth > 1024 && sidebar.classList.contains('open')) {
-                toggleMenu();
-            }
-        });
-    });
-    </script>
 </body>
 </html>
