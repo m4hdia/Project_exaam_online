@@ -1,32 +1,24 @@
-
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) ) {
-    header("Location: login.php");
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_type'] !== 'teacher') || ($_SESSION['status'] !== 'accepted')) {
+    header("Location: game.php");
     exit();
 }
 require_once 'config.php';
 
-
 try {
     // Récupérer le nombre de demandes en attente
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE user_type = 'student' AND status = 'pending'");
-$stmt->execute();
-$pendingCount = $stmt->fetchColumn();
-      $stmt = $pdo->query("SELECT * FROM exams ORDER BY end_date DESC");
-    $exams = $stmt->fetchAll(PDO::FETCH_ASSOC);
-  
-    $stats = [
-        'student' => $pdo->query("SELECT COUNT(*) FROM users where user_type='student' AND status = 'accepted'")->fetchColumn(),
-        'teacher' => $pdo->query("SELECT COUNT(*) FROM users where user_type='teacher'AND status = 'accepted'")->fetchColumn(),
-       
-    ];
-    $groupedResults=$pdo->query("SELECT COUNT(*) FROM student ")->fetchColumn();
-
-   
-
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE user_type = 'student' AND status = 'pending'");
     $stmt->execute();
-    $activities = $stmt->fetchAll();
+    $pendingCount = $stmt->fetchColumn();
+
+    $stmt = $pdo->query("SELECT * FROM exams ORDER BY end_date DESC");
+    $exams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $stats = [
+        'student' => $pdo->query("SELECT COUNT(*) FROM users WHERE user_type='student' AND status = 'accepted'")->fetchColumn(),
+        'teacher' => $pdo->query("SELECT COUNT(*) FROM users WHERE user_type='teacher' AND status = 'accepted'")->fetchColumn(),
+    ];
 } catch (PDOException $e) {
     error_log("Database error: " . $e->getMessage());
     $error_message = "A system error occurred. Please try again later.";
@@ -40,7 +32,6 @@ $pendingCount = $stmt->fetchColumn();
     <title>School Dashboard V2</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="teacher.css" rel="stylesheet">
-   
 </head>
 <style>
 /* Styles de base */
@@ -421,8 +412,7 @@ a {
         justify-content: center;
     }
 }
-/
-  /* Search Bar Styling */
+/* Search Bar Styling */
     .search-bar {
         display: flex;
         align-items: center;
@@ -523,10 +513,61 @@ a {
 /* button click effect*/
 .Btn:active {
   transform: translate(2px ,2px);
-}
+}    .floating-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 4rem;
+            height: 4rem;
+            background: var(--gradient-1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1) rotate(1deg);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            70% {
+                transform: scale(1.1);
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
 </style>
 <body>
-   <div class="sidebar">
+    <div class="sidebar">
         <div class="logo">Teacher</div>
         <nav class="nav-menu">
             <a class="nav-link active">
@@ -541,45 +582,34 @@ a {
                 <i class="fas fa-edit"></i>
                 <span>Create Exam</span>
             </a>
-           <a href="allstudent.php" class="nav-link">
+            <a href="allstudent.php" class="nav-link">
                 <i class="fas fa-user-graduate"></i>
                 <span>View Students</span>
             </a>
-           
         </nav>
     </div>
     <main class="main-content">
-      <header class="header">
-
-    <div class="search-bar">
-        <i class="fas fa-search search-icon"></i>
-        <input type="text" class="search-input" placeholder="Search..." id="searchInput">
-    </div>
-
- 
-    <div class="user-menu">
-        <!-- Profile Icon -->
-        <a href="profile.php" class="profile-link" style="text-decoration: none; color: inherit;">
-            <i class="fas fa-user-circle profile-icon" style="font-size: 1.5rem; cursor: pointer; margin-right: 1rem;"></i>
-        </a>
-
-     
-<a href="logout.php" style="text-decoration: none;">
-    <button class="Btn">
-        <div class="sign">
-            <svg viewBox="0 0 512 512">
-                <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"></path>
-            </svg>
-        </div>
-        <div class="text">Logout</div>
-    </button>
-</a>
-
-
-
-    </div>
-</header>
-
+        <header class="header">
+            <div class="search-bar">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Search..." id="searchInput">
+            </div>
+            <div class="user-menu">
+                <a href="profile.php" class="profile-link" style="text-decoration: none; color: inherit;">
+                    <i class="fas fa-user-circle profile-icon" style="font-size: 1.5rem; cursor: pointer; margin-right: 1rem;"></i>
+                </a>
+                <a href="logout.php" style="text-decoration: none;">
+                    <button class="Btn">
+                        <div class="sign">
+                            <svg viewBox="0 0 512 512">
+                                <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"></path>
+                            </svg>
+                        </div>
+                        <div class="text">Logout</div>
+                    </button>
+                </a>
+            </div>
+        </header>
         <div class="stats-grid">
             <div class="stat-card">
                 <i class="fas fa-user-graduate" style="color: #6366f1;"></i>
@@ -591,182 +621,161 @@ a {
                 <div class="stat-value"><?php echo number_format($stats['teacher']); ?></div>
                 <div class="stat-label">Teachers</div>
             </div>
-         
-           
         </div>
-
-    </div>
-    <h1>Liste des Examens</h1>
-
-  <?php if (!empty($exams)): ?>
-    <div class="exams-layout">
-        <?php foreach ($exams as $exam): ?>
-            <div class="exam-card">
-                <div class="exam-card-inner">
-                    <div class="exam-status">
-                        <span class="status-indicator <?php echo strtolower($exam['status']); ?>"></span>
-                        <span class="status-text"><?php echo htmlspecialchars($exam['status']); ?></span>
-                    </div>
-
-                    <div class="exam-main-content">
-                        <div class="exam-header">
-                            <h3><?php echo htmlspecialchars($exam['title']); ?></h3>
-                            <div class="exam-meta">
-                                <span class="exam-id">#<?php echo $exam['id']; ?></span>
+        <h1>Liste des Examens</h1>
+        <?php if (!empty($exams)): ?>
+            <div class="exams-layout">
+                <?php foreach ($exams as $exam): ?>
+                    <div class="exam-card">
+                        <div class="exam-card-inner">
+                            <div class="exam-status">
+                                <span class="status-indicator <?php echo strtolower($exam['status']); ?>"></span>
+                                <span class="status-text"><?php echo htmlspecialchars($exam['status']); ?></span>
                             </div>
-                        </div>
-
-                        <div class="exam-description-wrapper">
-                            <p class="exam-description"><?php echo htmlspecialchars($exam['description']); ?></p>
-                        </div>
-
-                        <div class="exam-details">
-                            <div class="exam-timing">
-                                <div class="timing-item">
-                                    <i class="far fa-calendar-alt"></i>
-                                    <div class="timing-info">
-                                        <span class="timing-label">Début</span>
-                                        <span class="timing-value"><?php echo date('d M Y - H:i', strtotime($exam['start_date'])); ?></span>
+                            <div class="exam-main-content">
+                                <div class="exam-header">
+                                    <h3><?php echo htmlspecialchars($exam['title']); ?></h3>
+                                    <div class="exam-meta">
+                                        <span class="exam-id">#<?php echo $exam['id']; ?></span>
                                     </div>
                                 </div>
-                                <div class="timing-item">
-                                    <i class="far fa-calendar-check"></i>
-                                    <div class="timing-info">
-                                        <span class="timing-label">Fin</span>
-                                        <span class="timing-value"><?php echo date('d M Y - H:i', strtotime($exam['end_date'])); ?></span>
-                                    </div>
+                                <div class="exam-description-wrapper">
+                                    <p class="exam-description"><?php echo htmlspecialchars($exam['description']); ?></p>
                                 </div>
-                            </div>
-
-                            <div class="countdown-timer" data-end-date="<?php echo htmlspecialchars($exam['end_date']); ?>">
-                                <div class="timer-container">
-                                    <div class="timer-block">
-                                        <span class="time days">00</span>
-                                        <span class="label">Jours</span>
+                                <div class="exam-details">
+                                    <div class="exam-timing">
+                                        <div class="timing-item">
+                                            <i class="far fa-calendar-alt"></i>
+                                            <div class="timing-info">
+                                                <span class="timing-label">Début</span>
+                                                <span class="timing-value"><?php echo date('d M Y - H:i', strtotime($exam['start_date'])); ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="timing-item">
+                                            <i class="far fa-calendar-check"></i>
+                                            <div class="timing-info">
+                                                <span class="timing-label">Fin</span>
+                                                <span class="timing-value"><?php echo date('d M Y - H:i', strtotime($exam['end_date'])); ?></span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="timer-block">
-                                        <span class="time hours">00</span>
-                                        <span class="label">Heures</span>
-                                    </div>
-                                    <div class="timer-block">
-                                        <span class="time minutes">00</span>
-                                        <span class="label">Minutes</span>
-                                    </div>
-                                    <div class="timer-block">
-                                        <span class="time seconds">00</span>
-                                        <span class="label">Secondes</span>
+                                    <div class="countdown-timer" data-end-date="<?php echo htmlspecialchars($exam['end_date']); ?>">
+                                        <div class="timer-container">
+                                            <div class="timer-block">
+                                                <span class="time days">00</span>
+                                                <span class="label">Jours</span>
+                                            </div>
+                                            <div class="timer-block">
+                                                <span class="time hours">00</span>
+                                                <span class="label">Heures</span>
+                                            </div>
+                                            <div class="timer-block">
+                                                <span class="time minutes">00</span>
+                                                <span class="label">Minutes</span>
+                                            </div>
+                                            <div class="timer-block">
+                                                <span class="time seconds">00</span>
+                                                <span class="label">Secondes</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                            <div class="exam-actions">
+                                <?php if ($exam['status'] !== 'published'): ?>
+                                    <button class="action-btn publish-btn" data-exam-id="<?php echo $exam['id']; ?>">
+                                        <i class="fas fa-upload"></i>
+                                        <span>Publier</span>
+                                    </button>
+                                <?php endif; ?>
+                                <button class="action-btn edit-btn" onclick="window.location.href='edit_exam.php?id=<?php echo $exam['id']; ?>'">
+                                    <i class="fas fa-edit"></i>
+                                    <span>Modifier</span>
+                                </button>
+                                <button class="action-btn delete-btn" onclick="confirmDelete(<?php echo $exam['id']; ?>)">
+                                    <i class="fas fa-trash"></i>
+                                    <span>Supprimer</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="exam-actions">
-                        <?php if ($exam['status'] !== 'published'): ?>
-                            <button class="action-btn publish-btn" data-exam-id="<?php echo $exam['id']; ?>">
-                                <i class="fas fa-upload"></i>
-                                <span>Publier</span>
-                            </button>
-                        <?php endif; ?>
-                        
-                        <button class="action-btn edit-btn" onclick="window.location.href='edit_exam.php?id=<?php echo $exam['id']; ?>'">
-                            <i class="fas fa-edit"></i>
-                            <span>Modifier</span>
-                        </button>
-                        
-                        <button class="action-btn delete-btn" onclick="confirmDelete(<?php echo $exam['id']; ?>)">
-                            <i class="fas fa-trash"></i>
-                            <span>Supprimer</span>
-                        </button>
-                    </div>
-                </div>
+                <?php endforeach; ?>
             </div>
-        <?php endforeach; ?>
-    </div>
-<?php else: ?>
-    <div class="empty-state">
-        <div class="empty-state-icon">
-            <i class="fas fa-clipboard-list"></i>
-        </div>
-        <h3>Aucun examen disponible</h3>
-        <p>Commencez par créer votre premier examen</p>
-    </div>
-<?php endif; ?>
-    
-    </div>
+        <?php else: ?>
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <h3>Aucun examen disponible</h3>
+                <p>Commencez par créer votre premier examen</p>
+            </div>
+        <?php endif; ?>
+        <a href="tech.php" class="floating-btn">
+            <i class="fas fa-plus"></i>
+            <?php if ($pendingCount > 0): ?>
+                <div class="notification-badge"><?php echo $pendingCount; ?></div>
+            <?php endif; ?>
+        </a>
+    </main>
+    <script>
+        function updateTimers() {
+            document.querySelectorAll('.countdown-timer').forEach(timerContainer => {
+                const endDate = new Date(timerContainer.dataset.endDate);
+                const now = new Date();
+                const diff = endDate - now;
 
+                if (diff <= 0) {
+                    timerContainer.innerHTML = '<div class="timer-ended">Examen terminé</div>';
+                    return;
+                }
 
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    <a href="tech.php">
-  <div class="floating-action-btn" id="addButton">
-    <i class="fas fa-plus" id="addIcon" ></i>
-    <div class="notification-badge"><?= $pendingCount > 0 ? $pendingCount : '' ?></div>
-     <?php if ($pendingCount > 0): ?>
-    <?php endif; ?>
-    
-</div>
-</a>
-
-
-</section>
-</main>
-<script>
-function updateTimers() {
-    document.querySelectorAll('.countdown-timer').forEach(timerContainer => {
-        const endDate = new Date(timerContainer.dataset.endDate);
-        const now = new Date();
-        const diff = endDate - now;
-
-        if (diff <= 0) {
-            timerContainer.innerHTML = '<div class="timer-ended">Examen terminé</div>';
-            return;
+                timerContainer.querySelector('.days').textContent = String(days).padStart(2, '0');
+                timerContainer.querySelector('.hours').textContent = String(hours).padStart(2, '0');
+                timerContainer.querySelector('.minutes').textContent = String(minutes).padStart(2, '0');
+                timerContainer.querySelector('.seconds').textContent = String(seconds).padStart(2, '0');
+            });
         }
 
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-        timerContainer.querySelector('.days').textContent = String(days).padStart(2, '0');
-        timerContainer.querySelector('.hours').textContent = String(hours).padStart(2, '0');
-        timerContainer.querySelector('.minutes').textContent = String(minutes).padStart(2, '0');
-        timerContainer.querySelector('.seconds').textContent = String(seconds).padStart(2, '0');
-    });
-}
-
-function confirmDelete(examId) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cet examen ?')) {
-        window.location.href = `delete_exam.php?id=${examId}`;
-    }
-}
-
-// Handle publish button clicks
-document.querySelectorAll('.publish-btn').forEach(button => {
-    button.addEventListener('click', async function() {
-        const examId = this.dataset.examId;
-        if (confirm('Voulez-vous publier cet examen ?')) {
-            try {
-                const response = await fetch(`publish_exam.php?id=${examId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                const data = await response.json();
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    alert('Erreur lors de la publication de l\'examen');
-                }
-            } catch (error) {
-                console.error('Erreur:', error);
-                alert('Une erreur est survenue');
+        function confirmDelete(examId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cet examen ?')) {
+                window.location.href = `delete_exam.php?id=${examId}`;
             }
         }
-    });
-});
 
-// Update timers every second
-setInterval(updateTimers, 1000);
-updateTimers(); // Initial update
-</script>
+        // Handle publish button clicks
+        document.querySelectorAll('.publish-btn').forEach(button => {
+            button.addEventListener('click', async function() {
+                const examId = this.dataset.examId;
+                if (confirm('Voulez-vous publier cet examen ?')) {
+                    try {
+                        const response = await fetch(`publish_exam.php?id=${examId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert('Erreur lors de la publication de l\'examen');
+                        }
+                    } catch (error) {
+                        console.error('Erreur:', error);
+                        alert('Une erreur est survenue');
+                    }
+                }
+            });
+        });
+
+        // Update timers every second
+        setInterval(updateTimers, 1000);
+        updateTimers(); // Initial update
+    </script>
+</body>
+</html>

@@ -103,7 +103,7 @@ session_start();
         <div id="status"></div>
         <button onclick="resetGame()" class="reset-btn">Nouvelle Partie</button>
         <br>
-        <a href="index.php" class="back-btn">Retour à l'accueil</a>
+        <a href="login.php" class="back-btn">Retour à l'accueil</a>
     </div>
 
     <script>
