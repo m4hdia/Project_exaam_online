@@ -1,10 +1,8 @@
-
 <?php
 // delete_exam.php
 
 // Inclure le fichier de configuration de la base de données
 require_once 'config.php';
-
 
 // Vérifier si l'ID de l'examen est passé en paramètre
 if (isset($_GET['id']) && !empty($_GET['id'])) {

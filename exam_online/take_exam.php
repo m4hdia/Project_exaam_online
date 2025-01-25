@@ -1,7 +1,6 @@
 <?php
+// take_exam.php - For students to take the exam
 session_start();
-
-// Vérifier si l'étudiant est connecté
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'student') {
     header("Location: login.php");
     exit();
@@ -9,217 +8,309 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'student') {
 
 require_once 'config.php';
 
-$exam_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$exam_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 try {
-    // Récupérer les détails de l'examen
+    // Fetch exam details
     $stmt = $pdo->prepare("
-        SELECT e.* 
-        FROM exams e
-        WHERE e.id = :exam_id
+        SELECT * FROM exams 
+        WHERE id = ? AND NOW() BETWEEN start_date AND end_date
     ");
-    $stmt->execute(['exam_id' => $exam_id]);
+    $stmt->execute([$exam_id]);
     $exam = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$exam) {
-        $error_message = "Examen non trouvé.";
-    } else {
-        // Récupérer toutes les questions et les réponses correctes
-        $stmt = $pdo->prepare("
-            SELECT q.*, a.answer_text as correct_answer,
-                   GROUP_CONCAT(DISTINCT CASE 
-                       WHEN q.type = 'mcq' THEN a.answer_text 
-                       ELSE NULL 
-                   END SEPARATOR '|||') as mcq_options
-            FROM questions q
-            LEFT JOIN answers a ON q.id = a.question_id
-            WHERE q.exam_id = :exam_id 
-            GROUP BY q.id
-            ORDER BY q.id ASC
-        ");
-        $stmt->execute(['exam_id' => $exam_id]);
-        $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Démarrer le timer si ce n'est pas déjà fait
-        if (!isset($_SESSION['exam_duration'])) {
-            $_SESSION['exam_duration'] = time() + ($exam['duration'] * 60);
-        }
+        die("Exam not found or not available.");
     }
 
-    // Gérer la soumission de l'examen
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_exam'])) {
-        foreach ($_POST['answers'] as $question_id => $answers) {
-            // Si c'est une question à choix multiples, les réponses sont un tableau
-            $answer_text = is_array($answers) ? implode('|||', $answers) : $answers;
+    // Check if student already took this exam
+    $stmt = $pdo->prepare("
+        SELECT * FROM exam_results 
+        WHERE student_id = ? AND exam_id = ?
+    ");
+    $stmt->execute([$_SESSION['user_id'], $exam_id]);
+    if ($stmt->fetch()) {
+        die("You have already taken this exam.");
+    }
 
-            $stmt = $pdo->prepare("
-                INSERT INTO student_answers 
-                (student_id, exam_id, question_id, answer_text, submitted_at) 
-                VALUES (:student_id, :exam_id, :question_id, :answer_text, NOW())
-                ON DUPLICATE KEY UPDATE answer_text = :answer_text, submitted_at = NOW()
-            ");
-            $stmt->execute([
-                'student_id' => $_SESSION['user_id'],
-                'exam_id' => $exam_id,
-                'question_id' => $question_id,
-                'answer_text' => $answer_text
-            ]);
+    // Fetch questions
+    $stmt = $pdo->prepare("
+        SELECT q.*, GROUP_CONCAT(
+            CONCAT(a.id, ':', a.answer_text)
+            SEPARATOR '||'
+        ) as answers
+        FROM questions q
+        LEFT JOIN answers a ON q.id = a.question_id
+        WHERE q.exam_id = ?
+        GROUP BY q.id
+    ");
+    $stmt->execute([$exam_id]);
+    $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Handle exam submission
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $pdo->beginTransaction();
+        
+        $total_points = 0;
+        $earned_points = 0;
+
+        foreach ($questions as $question) {
+            $total_points += $question['points'];
+            $answer = $_POST['answer_' . $question['id']] ?? '';
+
+            if ($question['type'] === 'mcq') {
+                // For MCQ, check if selected answer is correct
+                $stmt = $pdo->prepare("
+                    SELECT is_correct FROM answers 
+                    WHERE id = ? AND question_id = ?
+                ");
+                $stmt->execute([$answer, $question['id']]);
+                $is_correct = $stmt->fetchColumn();
+                
+                if ($is_correct) {
+                    $earned_points += $question['points'];
+                }
+            } else {
+                // For open questions, store answer for manual grading
+                // You could implement an auto-grading system here
+                $stmt = $pdo->prepare("
+                    INSERT INTO student_answers (
+                        student_id, question_id, answer_text
+                    ) VALUES (?, ?, ?)
+                ");
+                $stmt->execute([
+                    $_SESSION['user_id'],
+                    $question['id'],
+                    $answer
+                ]);
+            }
         }
 
-        // Enregistrer la fin de l'examen
+        // Calculate score as percentage
+        $score = ($earned_points / $total_points) * 100;
+
+        // Store exam result
         $stmt = $pdo->prepare("
-            INSERT INTO exam_results 
-            (student_id, exam_id, submitted_at, completion_time) 
-            VALUES (:student_id, :exam_id, NOW(), :completion_time)
+            INSERT INTO exam_results (
+                student_id, exam_id, score, submitted_at
+            ) VALUES (?, ?, ?, NOW())
         ");
         $stmt->execute([
-            'student_id' => $_SESSION['user_id'],
-            'exam_id' => $exam_id,
-            'completion_time' => time() - ($_SESSION['exam_duration'] - ($exam['duration'] * 60))
+            $_SESSION['user_id'],
+            $exam_id,
+            $score
         ]);
 
-        // Rediriger vers une page de confirmation
-        unset($_SESSION['exam_duration']);
-        header("Location: exam_complete.php");
+        $pdo->commit();
+        header("Location: student.php#results");
         exit();
     }
-
-} catch (PDOException $e) {
-    error_log("Database error: " . $e->getMessage());
-    $error_message = "Une erreur s'est produite. Veuillez réessayer plus tard.";
+} catch (Exception $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    die('Error: ' . $e->getMessage());
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= isset($exam) ? htmlspecialchars($exam['title']) : 'Examen' ?> - ExamOnline</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title><?= htmlspecialchars($exam['title']) ?></title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --surface: #ffffff;
+            --background: #f3f4f6;
+            --text: #1f2937;
+            --error: #ef4444;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.5;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .exam-header {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .question-card {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .timer {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            margin-top: 2rem;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            margin-top: 0.5rem;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            cursor: pointer;
+        }
+
+        .radio-option:hover {
+            background: #f9fafb;
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-    <div class="container mx-auto p-4 max-w-4xl">
-        <?php if (isset($error_message)): ?>
-            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4">
-                <div class="flex items-center">
-                    <i class="fas fa-exclamation-circle mr-2"></i>
-                    <p><?= htmlspecialchars($error_message) ?></p>
-                </div>
-                <a href="student_dashboard.php" class="mt-4 inline-block bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition duration-200">
-                    Retour au tableau de bord
-                </a>
-            </div>
-        <?php elseif (isset($exam) && !empty($questions)): ?>
-            <!-- Timer -->
-            <div id="timer" class="fixed top-4 right-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl shadow-lg text-lg font-semibold">
-                <i class="fas fa-clock mr-2"></i>
-                <span>Calcul...</span>
-            </div>
+<body>
+    <div class="container">
+        <div class="exam-header">
+            <h1><?= htmlspecialchars($exam['title']) ?></h1>
+            <p><?= htmlspecialchars($exam['description']) ?></p>
+            <p><strong>Duration:</strong> <?= htmlspecialchars($exam['duration']) ?> minutes</p>
+        </div>
 
-            <!-- En-tête de l'examen -->
-            <div class="bg-white rounded-xl shadow-md p-8 mb-8">
-                <h1 class="text-3xl font-bold text-gray-800 mb-4"><?= htmlspecialchars($exam['title']) ?></h1>
-                <div class="text-gray-600 space-y-2">
-                    <p class="text-lg"><?= htmlspecialchars($exam['description']) ?></p>
-                    <p class="flex items-center">
-                        <i class="fas fa-hourglass-half mr-2"></i>
-                        Durée: <?= htmlspecialchars($exam['duration']) ?> minutes
-                    </p>
-                </div>
-            </div>
+        <div class="timer" id="examTimer"></div>
 
-            <!-- Formulaire de l'examen -->
-            <form id="examForm" method="POST" action="" class="space-y-8">
-                <?php foreach ($questions as $index => $question): ?>
-                    <div class="bg-white rounded-xl shadow-md p-8 transition duration-200 hover:shadow-lg">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-xl font-semibold text-gray-800">
-                                Question <?= $index + 1 ?>
-                            </h3>
-                            <span class="bg-blue-100 text-blue-800 px-4 py-1 rounded-full text-sm">
-                                <?= htmlspecialchars($question['points']) ?> points
-                            </span>
+        <form id="examForm" method="POST">
+            <?php foreach ($questions as $index => $question): ?>
+                <div class="question-card">
+                    <h3>Question <?= $index + 1 ?></h3>
+                    <p><?= htmlspecialchars($question['question_text']) ?></p>
+                    
+                    <?php if ($question['file_path']): ?>
+                        <div class="question-file">
+                            <?php
+                            $ext = pathinfo($question['file_path'], PATHINFO_EXTENSION);
+                            if (in_array($ext, ['jpg', 'jpeg', 'png'])):
+                            ?>
+                                <img src="<?= htmlspecialchars($question['file_path']) ?>" 
+                                     alt="Question image" style="max-width: 100%">
+                            <?php else: ?>
+                                <a href="<?= htmlspecialchars($question['file_path']) ?>" 
+                                   target="_blank">View attached file</a>
+                            <?php endif; ?>
                         </div>
-                        
-                        <p class="text-gray-700 mb-6"><?= htmlspecialchars($question['question_text']) ?></p>
+                    <?php endif; ?>
 
-                        <?php if ($question['type'] === 'mcq'): ?>
-                            <div class="space-y-3">
-                                <?php foreach (explode('|||', $question['mcq_options']) as $option): ?>
-                                    <?php if ($option): ?>
-                                        <label class="flex items-center p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition duration-200">
-                                            <input 
-                                                type="checkbox" 
-                                                name="answers[<?= $question['id'] ?>][]" 
-                                                value="<?= htmlspecialchars($option) ?>" 
-                                                class="form-checkbox h-5 w-5 text-blue-600"
-                                            >
-                                            <span class="ml-3 text-gray-700"><?= htmlspecialchars($option) ?></span>
-                                        </label>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php else: ?>
-                            <textarea 
-                                name="answers[<?= $question['id'] ?>]" 
-                                rows="4" 
-                                required
-                                class="w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                placeholder="Écrivez votre réponse ici..."
-                            ></textarea>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
+                    <?php if ($question['type'] === 'mcq'): ?>
+                        <div class="radio-group">
+                            <?php 
+                            $answers = explode('||', $question['answers']);
+                            foreach ($answers as $answer):
+                                list($id, $text) = explode(':', $answer);
+                            ?>
+                                <label class="radio-option">
+                                    <input type="radio" 
+                                           name="answer_<?= $question['id'] ?>" 
+                                           value="<?= $id ?>" 
+                                           required>
+                                    <?= htmlspecialchars($text) ?>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <textarea name="answer_<?= $question['id'] ?>" 
+                                  rows="4" 
+                                  required 
+                                  placeholder="Enter your answer here..."></textarea>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
 
-                <button 
-                    type="submit" 
-                    name="submit_exam" 
-                    class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white text-lg font-semibold px-8 py-4 rounded-xl hover:from-blue-600 hover:to-blue-700 transition duration-200 shadow-md hover:shadow-lg"
-                >
-                    <i class="fas fa-paper-plane mr-2"></i>
-                    Soumettre l'examen
-                </button>
-            </form>
-
-            <script>
-                // Fonctionnalité du timer
-                const endTime = <?= $_SESSION['exam_duration'] ?> * 1000;
-
-                function updateTimer() {
-                    const now = new Date().getTime();
-                    const distance = endTime - now;
-
-                    if (distance <= 0) {
-                        clearInterval(timerInterval);
-                        document.getElementById('timer').innerHTML = '<i class="fas fa-clock mr-2"></i>Temps écoulé!';
-                        document.getElementById('examForm').submit();
-                        return;
-                    }
-
-                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                    document.getElementById('timer').innerHTML = 
-                        `<i class="fas fa-clock mr-2"></i>${minutes}m ${seconds}s`;
-
-                    // Avertissement visuel lorsque moins de 5 minutes
-                    if (minutes < 5) {
-                        document.getElementById('timer').classList.add('animate-pulse');
-                        document.getElementById('timer').classList.remove('from-blue-500', 'to-blue-600');
-                        document.getElementById('timer').classList.add('from-red-500', 'to-red-600');
-                    }
-                }
-
-                updateTimer();
-                const timerInterval = setInterval(updateTimer, 1000);
-
-                // Empêcher la navigation hors de la page
-                window.onbeforeunload = () => "Êtes-vous sûr de vouloir quitter l'examen ? Vos réponses ne seront pas sauvegardées.";
-                document.getElementById('examForm').onsubmit = () => window.onbeforeunload = null;
-            </script>
-        <?php endif; ?>
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-paper-plane"></i> Submit Exam
+            </button>
+        </form>
     </div>
+
+    <script>
+        // Set up exam timer
+        const duration = <?= $exam['duration'] ?>;
+        const endTime = new Date(new Date().getTime() + duration * 60000);
+
+        function updateTimer() {
+            const now = new Date();
+            const timeLeft = endTime - now;
+
+            if (timeLeft <= 0) {
+                document.getElementById('examForm').submit();
+                return;
+            }
+
+            const minutes = Math.floor(timeLeft / 60000);
+            const seconds = Math.floor((timeLeft % 60000) / 1000);
+
+            document.getElementById('examTimer').innerHTML = 
+                `Time remaining: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        setInterval(updateTimer, 1000);
+        updateTimer();
+
+        // Warn before leaving page
+        window.onbeforeunload = function() {
+            return "Are you sure you want to leave? Your answers will not be saved.";
+        };
+
+        // Remove warning when submitting form
+        document.getElementById('examForm').onsubmit = function() {
+            window.onbeforeunload = null;
+        };
+    </script>
 </body>
 </html>

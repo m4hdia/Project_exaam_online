@@ -7,7 +7,7 @@ error_reporting(E_ALL);
 try {
   
     $host = 'localhost';
-    $dbname = 'examonline_db';
+    $dbname = 'examonlinee_db';
     $username = 'root'; 
     $password = ''; 
 
